@@ -8,5 +8,5 @@ passlib[bcrypt]
 python-multipart
 alembic
 pydantic-settings
-pydantic[email]
 email-validator
+bcrypt==4.0.1
