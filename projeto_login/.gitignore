@@ -1,0 +1,16 @@
+# Senhas e Segredos
+.env
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+
+# Arquivos do Docker / Banco de Dados
+mysql_data/
+
+# Ambiente Virtual (se tiver criado localmente)
+venv/
+.venv/
+
+# Pastas do VS Code
+.vscode/

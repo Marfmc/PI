@@ -2,161 +2,72 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Seguro</title>
+    <title>ServiceConnect - Home</title>
     <style>
-        :root { --bg: #013E46; --primary: #54A858; --white: #fff; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
-        .container { background: var(--white); width: 400px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        
-        /* Abas */
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #aaa; font-weight: bold; }
-        .tab.active { color: var(--bg); border-bottom: 3px solid var(--primary); }
-        
-        /* Form */
-        .form-box { display: none; }
-        .form-box.active { display: block; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background: #469149; }
-        
-        /* Mensagens */
-        .msg { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none; font-size: 0.9rem; }
-        .error { background: #f8d7da; color: #721c24; }
-        .success { background: #d4edda; color: #155724; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        header { background: #013E46; padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .hero { text-align: center; padding: 100px 20px; background: white; }
+        h1 { color: #54A858; font-size: 3rem; }
+        .btn { padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold; margin: 10px; display: inline-block; cursor: pointer; }
+        .btn-primary { background: #54A858; color: white; }
+        .btn-outline { border: 2px solid #54A858; color: #54A858; }
+        .top-nav a { color: white; text-decoration: none; margin-left: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('login')">Entrar</div>
-            <div class="tab" onclick="switchTab('register')">Criar Conta</div>
+    <header>
+        <div class="logo">ConstruFacil</div>
+        <div class="top-nav" id="nav-links">
+            <a href="login.html">Entrar / Criar Conta</a>
         </div>
+    </header>
 
-        <div id="login-form" class="form-box active">
-            <h2 style="text-align:center; color:#013E46;">Bem-vindo</h2>
-            <form onsubmit="handleLogin(event)">
-                <input type="email" id="login-email" required placeholder="Email">
-                <input type="password" id="login-password" required placeholder="Senha">
-                <button type="submit" id="btn-login">ENTRAR</button>
-                <div id="msg-login" class="msg"></div>
-            </form>
-        </div>
-
-        <div id="register-form" class="form-box">
-            <h2 style="text-align:center; color:#013E46;">Nova Conta</h2>
-            <form onsubmit="handleRegister(event)">
-                <input type="email" id="reg-email" required placeholder="Email">
-                <input type="password" id="reg-password" required placeholder="Senha">
-                <input type="password" id="reg-confirm" required placeholder="Confirmar Senha">
-                <button type="submit" id="btn-reg">CADASTRAR</button>
-                <div id="msg-reg" class="msg"></div>
-            </form>
+    <div class="hero">
+        <h1>Conectando quem precisa<br>com quem sabe fazer.</h1>
+        <p>A plataforma completa para serviços rápidos e seguros.</p>
+        <br>
+        <div id="action-buttons">
+            <a href="login.html" class="btn btn-primary">Quero Contratar</a>
+            <a href="login.html" class="btn btn-outline">Quero Prestar Serviço</a>
         </div>
     </div>
 
     <script>
-        // 1. VERIFICAÇÃO AUTOMÁTICA
-        // Assim que a página abre, verifica se já tem login
-        window.onload = function() {
-            if (localStorage.getItem('token')) {
-                window.location.href = "dashboard.html"; // Redireciona para a outra página
-            }
-        };
+        // LÓGICA INTELIGENTE DA HOME
+        const token = localStorage.getItem('token');
 
-        const API_URL = ""; 
-
-        // Login
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const btn = document.getElementById('btn-login');
-
-            btn.disabled = true; btn.innerText = "Entrando...";
-
-            const formData = new URLSearchParams();
-            formData.append('username', email);
-            formData.append('password', password);
-
-            try {
-                const response = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('token', data.access_token); // Salva token
-                    showMessage('msg-login', 'Sucesso! Redirecionando...');
-                    setTimeout(() => window.location.href = "dashboard.html", 1000); // Vai para o dashboard
-                } else {
-                    showMessage('msg-login', 'Dados incorretos', true);
-                }
-            } catch (error) {
-                showMessage('msg-login', 'Erro de conexão', true);
-            } finally {
-                btn.disabled = false; btn.innerText = "ENTRAR";
-            }
-        }
-
-        // Registro
-        async function handleRegister(e) {
-            e.preventDefault();
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const confirm = document.getElementById('reg-confirm').value;
-            const btn = document.getElementById('btn-reg');
-
-            if (password !== confirm) { showMessage('msg-reg', 'Senhas não batem', true); return; }
-
-            btn.disabled = true; btn.innerText = "Criando...";
-
-            try {
-                const response = await fetch(`${API_URL}/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-
-                if (response.ok) {
-                    showMessage('msg-reg', 'Conta criada! Faça login.');
-                    setTimeout(() => switchTab('login'), 1500);
-                } else {
-                    showMessage('msg-reg', 'Erro ao criar conta', true);
-                }
-            } catch (error) {
-                showMessage('msg-reg', 'Erro de conexão', true);
-            } finally {
-                btn.disabled = false; btn.innerText = "CADASTRAR";
-            }
-        }
-
-        // Utilitários
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.form-box').forEach(f => f.classList.remove('active'));
-            document.querySelectorAll('.msg').forEach(m => m.style.display = 'none');
+        if (token) {
+            // Se já está logado, muda os botões para "Ir para meu Painel"
+            document.getElementById('nav-links').innerHTML = `
+                <a href="#" onclick="logout()">Sair</a>
+            `;
             
-            if(tab === 'login') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('login-form').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('register-form').classList.add('active');
-            }
+            document.getElementById('action-buttons').innerHTML = `
+                <p>Olá! Você já está logado.</p>
+                <button onclick="checkRedirect()" class="btn btn-primary">Acessar Meu Painel</button>
+            `;
         }
 
-        function showMessage(id, text, isError = false) {
-            const el = document.getElementById(id);
-            el.innerText = text;
-            el.className = `msg ${isError ? 'error' : 'success'}`;
-            el.style.display = 'block';
+        async function checkRedirect() {
+            // Verifica quem é o usuário para mandar pro lugar certo
+            try {
+                const response = await fetch('/me', { headers: { 'Authorization': `Bearer ${token}` }});
+                if (response.ok) {
+                    const user = await response.json();
+                    // Lógica de redirecionamento baseada no último acesso ou padrão
+                    // Por enquanto mandamos para o contratante por padrão
+                    window.location.href = "dash_contratante.html"; 
+                } else {
+                    localStorage.removeItem('token');
+                    window.location.href = "login.html";
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
         }
     </script>
 </body>

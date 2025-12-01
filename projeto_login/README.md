@@ -36,6 +36,17 @@ SECRET_KEY=sua_chave_secreta_super_segura
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
+### 👥 Trabalho em Equipe (Configuração Inicial)
+
+1. Clone o repositório.
+2. Crie seu arquivo de configuração local:
+   - Copie o arquivo `.env.example` e renomeie para `.env`.
+   - Se necessário, ajuste as senhas dentro dele.
+3. Suba os containers:
+   `docker compose up --build`
+4. Crie as tabelas no seu banco local:
+   `docker compose exec web alembic upgrade head`
+
 
 ## Estrutura do Projeto ##
 
@@ -57,9 +68,7 @@ projeto_login/
 
 No terminal, dentro da pasta do projeto, execute:
 
-Bash
-
-docker compose up --build
+docker compose up --build -d
 Aguarde até o terminal exibir a mensagem: Application startup complete. A API estará rodando em: http://localhost:8000
 
 
@@ -124,3 +133,17 @@ Reiniciar tudo do zero (Apagar banco de dados e recriar): Caso tenha problemas c
 docker compose down -v
 docker compose up --build
 (Lembre-se de rodar o alembic upgrade head novamente após esse comando).
+
+## Sobre alterações nas tabelas ##
+
+Quando mudamos o modelo, precisamos rodar a migração do Alembic. No terminal:
+
+docker compose exec web alembic revision --autogenerate -m "add lgpd and roles"
+
+docker compose exec web alembic upgrade head
+
+## Subtituição de credenciais ##
+
+acho importante deixar claro ao dev que estiver usando esse projeto que ele deve criar um arquivo .env na raiz do projeto e copiar e modificar o arquivo .env.example
+
+falando mais sobre o uso do projeto, acho que já citei mas o dev precisa usar o comando "alembic upgrade head" para gerar o arquivo mysql_data e guardar tudo que precisa 

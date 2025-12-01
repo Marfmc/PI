@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Contratante</title>
+    <style>
+        /* Estilos básicos */
+        body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; }
+        .navbar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo { color: #013E46; font-weight: bold; font-size: 1.2rem; }
+        
+        /* O BOTÃO TOGGLE (MUDAR DE MUNDO) */
+        .role-switch {
+            background: #eee; border-radius: 20px; padding: 5px; display: flex; align-items: center; cursor: pointer;
+        }
+        .role-option { padding: 8px 15px; border-radius: 15px; font-size: 0.9rem; color: #777; transition: 0.3s; }
+        .role-option.active { background: #013E46; color: white; font-weight: bold; }
+        
+        .content { padding: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="logo">ServiceConnect</div>
+        
+        <div class="role-switch">
+            <div class="role-option active">Contratante</div>
+            <div class="role-option" onclick="mudarModo('prestador')">Prestador</div>
+        </div>
+
+        <div>
+            <span id="u-email">...</span> | <a href="#" onclick="logout()" style="color:red">Sair</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1>Área do Contratante</h1>
+        <p>Busque por pedreiros, eletricistas e designers aqui.</p>
+        </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = "login.html";
+
+        let currentUser = null;
+
+        // 1. Carrega dados e verifica flags
+        async function loadUser() {
+            const response = await fetch('/me', { headers: { 'Authorization': `Bearer ${token}` }});
+            if (response.ok) {
+                currentUser = await response.json();
+                document.getElementById('u-email').innerText = currentUser.email;
+            } else {
+                logout();
+            }
+        }
+
+        // 2. LÓGICA DO BOTÃO DE TROCA
+        function mudarModo(modo) {
+            if (modo === 'prestador') {
+                // Verifica se ele já completou o cadastro de prestador
+                if (currentUser.is_provider_setup) {
+                    // Se sim, deixa entrar
+                    window.location.href = "dash_prestador.html";
+                } else {
+                    // Se não, manda preencher os dados
+                    alert("Você precisa completar seu perfil profissional antes!");
+                    // window.location.href = "setup_prestador.html"; // Futuro arquivo
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = "login.html";
+        }
+
+        loadUser();
+    </script>
+</body>
+</html>

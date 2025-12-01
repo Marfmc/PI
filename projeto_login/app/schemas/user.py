@@ -1,17 +1,21 @@
 from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from typing import Optional
 
-# Base comum (dados compartilhados)
 class UserBase(BaseModel):
     email: EmailStr
 
-# Schema para criar conta (recebe senha)
 class UserCreate(UserBase):
     password: str
+    terms_accepted: bool # <--- Novo campo obrigatório no cadastro
 
-# Schema para leitura (devolve o dado SEM a senha)
 class UserResponse(UserBase):
     id: int
     is_active: bool
+    terms_accepted: bool
+    accepted_at: Optional[datetime]
+    is_provider_setup: bool   # O front precisa saber disso para redirecionar
+    is_contractor_setup: bool # O front precisa saber disso para redirecionar
 
     class Config:
         from_attributes = True
