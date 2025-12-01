@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db.session import get_db
 from app.api import auth
-
+import logging
 app = FastAPI(title="Projeto Login Escalável")
 
 # 1. Inclui as rotas da API (Login, Cadastro, Auth)
@@ -23,7 +23,8 @@ def test_db_connection(db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))
         return {"status": "sucesso", "db": "Conectado ao MySQL!"}
     except Exception as e:
-        return {"status": "erro", "detalhes": str(e)}
+        logging.error("Database connection test failed", exc_info=True)
+        return {"status": "erro", "detalhes": "Falha ao conectar ao banco de dados."}
 
 # 2. Montar arquivos estáticos na raiz
 # Isso faz com que ao acessar http://localhost:8000/, ele abra o index.html
