@@ -2,27 +2,46 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Contratante</title>
+    <title>Painel Contratante - ConstruFácil</title>
     <style>
-        /* Estilos básicos */
         body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; }
-        .navbar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* NAVBAR PADRONIZADA (Branca) */
+        .navbar { 
+            background: #fff; 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            position: relative;
+        }
         .logo { color: #013E46; font-weight: bold; font-size: 1.2rem; }
         
-        /* O BOTÃO TOGGLE (MUDAR DE MUNDO) */
         .role-switch {
-            background: #eee; border-radius: 20px; padding: 5px; display: flex; align-items: center; cursor: pointer;
+            background: #eee; 
+            border-radius: 20px; 
+            padding: 5px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer;
+
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
-        .role-option { padding: 8px 15px; border-radius: 15px; font-size: 0.9rem; color: #777; transition: 0.3s; }
+        .role-option { padding: 5px 15px; border-radius: 15px; font-size: 0.9rem; color: #777; transition: 0.3s; }
+        .role-option:hover { background: #e0e0e0; }
         .role-option.active { background: #013E46; color: white; font-weight: bold; }
         
         .content { padding: 40px; text-align: center; }
+        a.logout-link { color: #d9534f; text-decoration: none; font-weight: bold; margin-left: 10px; }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <div class="logo">ServiceConnect</div>
+        <div class="logo">ConstruFácil</div>
         
         <div class="role-switch">
             <div class="role-option active">Contratante</div>
@@ -30,14 +49,14 @@
         </div>
 
         <div>
-            <span id="u-email">...</span> | <a href="#" onclick="logout()" style="color:red">Sair</a>
+            <span id="u-email">...</span> | <a href="#" onclick="logout()" class="logout-link">Sair</a>
         </div>
     </div>
 
     <div class="content">
         <h1>Área do Contratante</h1>
-        <p>Busque por pedreiros, eletricistas e designers aqui.</p>
-        </div>
+        <p>Busque por pedreiros, eletricistas e outros profissionais.</p>
+    </div>
 
     <script>
         const token = localStorage.getItem('token');
@@ -45,7 +64,6 @@
 
         let currentUser = null;
 
-        // 1. Carrega dados e verifica flags
         async function loadUser() {
             const response = await fetch('/me', { headers: { 'Authorization': `Bearer ${token}` }});
             if (response.ok) {
@@ -56,26 +74,19 @@
             }
         }
 
-        // 2. LÓGICA DO BOTÃO DE TROCA
         function mudarModo(modo) {
             if (modo === 'prestador') {
-                // Verifica se ele já completou o cadastro de prestador
                 if (currentUser.is_provider_setup) {
-                    // Se sim, deixa entrar
                     window.location.href = "dash_prestador.html";
                 } else {
-                    // Se não, manda preencher os dados
-                    alert("Você precisa completar seu perfil profissional antes!");
-                    // window.location.href = "setup_prestador.html"; // Futuro arquivo
+                    if(confirm("Você precisa completar seu perfil profissional antes! Vamos lá?")) {
+                        window.location.href = "setup_prestador.html"; 
+                    }
                 }
             }
         }
 
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = "login.html";
-        }
-
+        function logout() { localStorage.removeItem('token'); window.location.href = "login.html"; }
         loadUser();
     </script>
 </body>

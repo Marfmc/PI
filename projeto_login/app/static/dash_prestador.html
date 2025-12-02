@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Prestador - ConstruFácil</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #fff; margin: 0; }
+        
+        /* NAVBAR PADRONIZADA (Verde) */
+        .navbar { 
+            background: #54A858; 
+            padding: 15px 30px; /* Mesma medida do Contratante */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: white; 
+            position: relative; /*alinha o botão central, apesar do que tem nas bordas */
+        }
+
+        .logo { font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        
+        .mode-badge { 
+            background: rgba(255,255,255,0.2); 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: normal; 
+        }
+
+        /* TOGGLE PADRONIZADO */
+        .role-switch { 
+            background: rgba(0,0,0,0.2); 
+            padding: 5px; 
+            border-radius: 20px; 
+            display: flex; 
+            cursor: pointer; 
+
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .role-option { padding: 5px 15px; border-radius: 15px; font-size: 0.9rem; color: #eee; transition: 0.3s; }
+        .role-option:hover { background: rgba(255,255,255,0.1); }
+        .role-option.active { background: white; color: #54A858; font-weight: bold; }
+
+        /* Estilos do Conteúdo */
+        .container { padding: 40px; text-align: center; }
+        a.logout-link { color: white; text-decoration: none; font-weight: bold; margin-left: 10px; }
+        a.logout-link:hover { text-decoration: underline; }
+
+        /* Cards */
+        .job-card { border: 1px solid #ddd; padding: 20px; margin: 20px auto; max-width: 600px; border-radius: 8px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .badge { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; color: #333; }
+        .btn-accept { padding: 8px 16px; background: #54A858; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="logo">
+            ConstruFácil 
+            <span class="mode-badge">Modo Prestador</span>
+        </div>
+        
+        <div class="role-switch">
+            <div class="role-option" onclick="irParaContratante()">Contratante</div>
+            <div class="role-option active">Prestador</div>
+        </div>
+
+        <div>
+            <span id="u-name">Carregando...</span> | <a href="#" onclick="logout()" class="logout-link">Sair</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Serviços Disponíveis</h1>
+        <p>Pedidos que combinam com suas habilidades: <strong id="u-skills" style="color:#54A858">...</strong></p>
+        
+        <div class="job-card">
+            <h3>Instalação de Chuveiro</h3>
+            <p>Preciso de um eletricista para instalar chuveiro 220v no bairro Centro.</p>
+            <div>
+                <span class="badge">Eletricista</span> <span class="badge">Urgente</span>
+            </div>
+            <button class="btn-accept">Aceitar Serviço</button>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = "login.html";
+
+        async function loadData() {
+            try {
+                const response = await fetch('/me', { headers: { 'Authorization': `Bearer ${token}` }});
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('u-name').innerText = user.full_name || user.email;
+                    if (user.profession) {
+                        document.getElementById('u-skills').innerText = user.profession.join(", ");
+                    }
+                } else {
+                    logout();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function irParaContratante() { window.location.href = "dash_contratante.html"; }
+        function logout() { localStorage.removeItem('token'); window.location.href = "login.html"; }
+        loadData();
+    </script>
+</body>
+</html>

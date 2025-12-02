@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON
 from sqlalchemy.sql import func
 from app.db.base import Base
 
@@ -18,3 +18,11 @@ class User(Base):
     # Indica se o usuário preencheu os dados obrigatórios de cada perfil
     is_provider_setup = Column(Boolean, default=False)   # Perfil Prestador completo?
     is_contractor_setup = Column(Boolean, default=False) # Perfil Contratante completo?
+
+    full_name = Column(String(255), nullable=True)
+    phone = Column(String(50) , nullable=True)
+    document_id = Column(String(50) , nullable=True)
+
+    profession = Column(JSON, nullable=True)
+
+    bio = Column(Text, nullable=True)

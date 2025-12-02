@@ -1,13 +1,13 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class UserBase(BaseModel):
     email: EmailStr
 
 class UserCreate(UserBase):
     password: str
-    terms_accepted: bool # <--- Novo campo obrigatório no cadastro
+    terms_accepted: bool  #campo obrigatório no cadastro
 
 class UserResponse(UserBase):
     id: int
@@ -19,3 +19,10 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+class ProviderSetupRequest(BaseModel):
+    full_name: str
+    phone: str
+    document_id: str
+    profession: List[str]
+    bio: str

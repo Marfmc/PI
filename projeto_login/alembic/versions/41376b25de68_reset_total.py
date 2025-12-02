@@ -1,8 +1,8 @@
-"""tabela inicial
+"""reset total
 
-Revision ID: f4e8b5790d74
+Revision ID: 41376b25de68
 Revises: 
-Create Date: 2025-12-01 02:13:59.111064
+Create Date: 2025-12-02 13:08:59.978562
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f4e8b5790d74'
+revision: str = '41376b25de68'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,6 +26,15 @@ def upgrade() -> None:
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('hashed_password', sa.String(length=255), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('terms_accepted', sa.Boolean(), nullable=False),
+    sa.Column('accepted_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('is_provider_setup', sa.Boolean(), nullable=True),
+    sa.Column('is_contractor_setup', sa.Boolean(), nullable=True),
+    sa.Column('full_name', sa.String(length=255), nullable=True),
+    sa.Column('phone', sa.String(length=50), nullable=True),
+    sa.Column('document_id', sa.String(length=50), nullable=True),
+    sa.Column('profession', sa.JSON(), nullable=True),
+    sa.Column('bio', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)

@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>ServiceConnect - Home</title>
+    <title>ConstruFácil - Home</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
-        header { background: #013E46; padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        header { background: #013E46; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .logo { font-size: 1.5rem; font-weight: bold; }
         .hero { text-align: center; padding: 100px 20px; background: white; }
-        h1 { color: #54A858; font-size: 3rem; }
+        h1 { color: #54A858; font-size: 3rem; margin-bottom: 10px; }
         .btn { padding: 15px 30px; border-radius: 5px; text-decoration: none; font-weight: bold; margin: 10px; display: inline-block; cursor: pointer; }
         .btn-primary { background: #54A858; color: white; }
         .btn-outline { border: 2px solid #54A858; color: #54A858; }
@@ -17,32 +18,27 @@
 <body>
 
     <header>
-        <div class="logo">ConstruFacil</div>
+        <div class="logo">ConstruFácil</div>
         <div class="top-nav" id="nav-links">
             <a href="login.html">Entrar / Criar Conta</a>
         </div>
     </header>
 
     <div class="hero">
-        <h1>Conectando quem precisa<br>com quem sabe fazer.</h1>
+        <h1>Conectando quem precisa<br>com quem sabe construir.</h1>
         <p>A plataforma completa para serviços rápidos e seguros.</p>
         <br>
         <div id="action-buttons">
             <a href="login.html" class="btn btn-primary">Quero Contratar</a>
-            <a href="login.html" class="btn btn-outline">Quero Prestar Serviço</a>
+            <a href="login.html" class="btn btn-outline">Sou Profissional</a>
         </div>
     </div>
 
     <script>
-        // LÓGICA INTELIGENTE DA HOME
         const token = localStorage.getItem('token');
 
         if (token) {
-            // Se já está logado, muda os botões para "Ir para meu Painel"
-            document.getElementById('nav-links').innerHTML = `
-                <a href="#" onclick="logout()">Sair</a>
-            `;
-            
+            document.getElementById('nav-links').innerHTML = `<a href="#" onclick="logout()">Sair</a>`;
             document.getElementById('action-buttons').innerHTML = `
                 <p>Olá! Você já está logado.</p>
                 <button onclick="checkRedirect()" class="btn btn-primary">Acessar Meu Painel</button>
@@ -50,13 +46,9 @@
         }
 
         async function checkRedirect() {
-            // Verifica quem é o usuário para mandar pro lugar certo
             try {
                 const response = await fetch('/me', { headers: { 'Authorization': `Bearer ${token}` }});
                 if (response.ok) {
-                    const user = await response.json();
-                    // Lógica de redirecionamento baseada no último acesso ou padrão
-                    // Por enquanto mandamos para o contratante por padrão
                     window.location.href = "dash_contratante.html"; 
                 } else {
                     localStorage.removeItem('token');

@@ -3,17 +3,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, ProviderSetupRequest
 from app.schemas.token import Token
 from app.core.security import get_password_hash, verify_password, create_access_token
-from app.api.deps import get_current_user # Importar a dependência de segurança
+from app.api.deps import get_current_user 
 
 router = APIRouter()
 
-# --- CADASTRO (ATUALIZADO COM LGPD) ---
+# --- CADASTRO (LGPD) ---
 @router.post("/signup", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Valida LGPD
     if not user.terms_accepted:
         raise HTTPException(status_code=400, detail="É necessário aceitar os termos de uso.")
 
@@ -23,7 +22,6 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     hashed_password = get_password_hash(user.password)
     
-    # Cria usuário com as flags de perfil como False (ainda não preencheu)
     new_user = User(
         email=user.email, 
         hashed_password=hashed_password,
@@ -38,7 +36,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
-# --- LOGIN (MANTER IGUAL) ---
+# --- LOGIN ---
 @router.post("/login", response_model=Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
@@ -51,17 +49,34 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# --- ROTA DE PERFIL (Para o Dashboard saber o status) ---
+# --- ROTA DE PERFIL ---
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-# --- ROTA LGPD: EXCLUIR CONTA ---
+# --- ROTA DELETAR CONTA (LGPD) ---
 @router.delete("/me", status_code=204)
 def delete_my_account(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    LGPD: Permite ao usuário excluir permanentemente seus dados.
-    """
     db.delete(current_user)
     db.commit()
     return
+
+# --- ROTA: ATIVAR PRESTADOR (Aqui estava o problema provável) ---
+@router.put("/me/setup_provider")
+def setup_provider_profile(
+    data: ProviderSetupRequest, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    current_user.full_name = data.full_name
+    current_user.phone = data.phone
+    current_user.document_id = data.document_id
+    current_user.profession = data.profession
+    current_user.bio = data.bio
+    
+    current_user.is_provider_setup = True
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"message": "Perfil de prestador ativado com sucesso!"}
