@@ -1,5 +1,5 @@
 # Senhas e Segredos
-.env
+**/.env
 
 # Cache do Python
 __pycache__/
