@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Completar Perfil Profissional</title>
+    <title>Completar Perfil</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 40px; }
         .card { background: white; width: 600px; padding: 40px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
@@ -11,25 +13,25 @@
         
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         textarea { height: 100px; resize: none; }
         
-        /* Estilo dos Checkboxes */
+        /* Checkboxes */
         .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
         .checkbox-item { display: flex; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee; cursor: pointer; transition: 0.2s; }
         .checkbox-item:hover { background: #eef; border-color: #ccc; }
         .checkbox-item input { margin-right: 10px; width: auto; }
 
-        /* Campo "Outra" (Escondido por padrão) */
-        #other-category-container { display: none; margin-top: 15px; background: #eef; padding: 15px; border-radius: 5px; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+        /* Botão */
         button { 
             width: 100%; padding: 12px; background: #54A858; color: white; border: none; 
             border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 20px;
         }
         button:hover { background: #469149; }
         button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #other-category-container { display: none; margin-top: 15px; background: #eef; padding: 15px; border-radius: 5px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -51,7 +53,7 @@
 
             <div class="form-group">
                 <label>Telefone / WhatsApp</label>
-                <input type="text" id="phone" required placeholder="(00) 90000-0000">
+                <input type="text" id="phone" required placeholder="(00) 00000-0000">
             </div>
 
             <div class="form-group">
@@ -64,14 +66,12 @@
                     <label class="checkbox-item"><input type="checkbox" name="cat" value="Técnico TI"> Técnico TI</label>
                     <label class="checkbox-item"><input type="checkbox" name="cat" value="Pintor"> Pintor</label>
                     <label class="checkbox-item"><input type="checkbox" name="cat" value="Jardineiro"> Jardineiro</label>
-                    
                     <label class="checkbox-item" style="background: #e2e6ea; font-weight: bold;">
                         <input type="checkbox" id="chk-other" onchange="toggleOtherField()"> Outra (Não consta)
                     </label>
                 </div>
-
                 <div id="other-category-container">
-                    <label for="other_category_input">Qual sua especialidade?</label>
+                    <label>Qual sua especialidade?</label>
                     <input type="text" id="other_category_input" placeholder="Digite aqui (ex: Marceneiro)">
                 </div>
             </div>
@@ -85,55 +85,56 @@
         </form>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://unpkg.com/imask"></script>
+
     <script>
         const token = localStorage.getItem('token');
         if (!token) window.location.href = "login.html";
 
-        // --- NOVA FUNÇÃO: Mostrar/Esconder o campo "Outra" ---
+        // --- 1. TOAST NOTIFICATION ---
+        const notify = (text, type = "success") => {
+            let bg = type === "success" ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)";
+            Toastify({ text, duration: 3000, gravity: "top", position: "center", style: { background: bg } }).showToast();
+        };
+
+        // --- 2. APLICAR MÁSCARAS ---
+        window.onload = function() {
+            // Máscara de Telefone (Celular com 9 dígitos)
+            IMask(document.getElementById('phone'), { mask: '(00) 00000-0000' });
+            
+            // Máscara de CPF ou CNPJ (Dinâmica)
+            const docMask = IMask(document.getElementById('document_id'), {
+                mask: [
+                    { mask: '000.000.000-00' }, // CPF
+                    { mask: '00.000.000/0000-00' } // CNPJ
+                ]
+            });
+        };
+
         function toggleOtherField() {
-            const chkOther = document.getElementById('chk-other');
+            const chk = document.getElementById('chk-other');
             const container = document.getElementById('other-category-container');
-            if (chkOther.checked) {
-                container.style.display = 'block';
-                document.getElementById('other_category_input').focus(); // Foca no campo automaticamente
-            } else {
-                container.style.display = 'none';
-                document.getElementById('other_category_input').value = ''; // Limpa se desmarcar
-            }
+            container.style.display = chk.checked ? 'block' : 'none';
+            if(chk.checked) document.getElementById('other_category_input').focus();
         }
 
         async function submitSetup(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-save');
             
-            // 1. CAPTURAR CHECKBOXES PADRÃO
             const checkboxes = document.querySelectorAll('input[name="cat"]:checked');
             let selectedCategories = [];
-            checkboxes.forEach((checkbox) => {
-                selectedCategories.push(checkbox.value);
-            });
+            checkboxes.forEach((c) => selectedCategories.push(c.value));
 
-            // --- NOVA LÓGICA: Capturar o campo "Outra" ---
             const chkOther = document.getElementById('chk-other');
-            const otherInput = document.getElementById('other_category_input');
-
             if (chkOther.checked) {
-                const customCategory = otherInput.value.trim();
-                if (customCategory === "") {
-                    alert("Por favor, digite qual é a sua especialidade no campo 'Outra'.");
-                    otherInput.focus();
-                    return; // Para o envio se estiver vazio
-                }
-                // Adiciona o texto digitado na lista final
-                selectedCategories.push(customCategory);
+                const custom = document.getElementById('other_category_input').value.trim();
+                if (custom) selectedCategories.push(custom);
+                else { notify("Digite a especialidade no campo 'Outra'.", "error"); return; }
             }
-            // ---------------------------------------------
 
-
-            if (selectedCategories.length === 0) {
-                alert("Selecione pelo menos uma especialidade!");
-                return;
-            }
+            if (selectedCategories.length === 0) { notify("Selecione pelo menos uma especialidade!", "error"); return; }
 
             btn.disabled = true; btn.innerText = "Salvando...";
 
@@ -148,24 +149,18 @@
             try {
                 const response = await fetch('/me/setup_provider', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-                    alert("Perfil ativado com sucesso! Bem-vindo ao time.");
-                    window.location.href = "dash_prestador.html";
+                    notify("Perfil ativado com sucesso! Redirecionando...", "success");
+                    setTimeout(() => window.location.href = "dashboard.html", 2000);
                 } else {
-                    const errorData = await response.json();
-                    alert("Erro: " + JSON.stringify(errorData));
+                    notify("Erro ao salvar dados.", "error");
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Erro de conexão.");
-            } finally {
+            } catch (error) { notify("Erro de conexão.", "error"); }
+            finally {
                 btn.disabled = false; btn.innerText = "SALVAR E ATIVAR PERFIL";
             }
         }

@@ -29,5 +29,16 @@ services:
     depends_on:
       - db
 
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    command: http web:8000  # "web" é o nome do container do seu Python
+    environment:
+      NGROK_AUTHTOKEN: 36IobOoQgxPL7GSlRIvBwtp3Ptt_39Nedr5FUVvemapDWe1F
+    ports:
+      - 4040:4040 # Libera o painel de controle
+    depends_on:
+      - web
+
 volumes:
   mysql_data:

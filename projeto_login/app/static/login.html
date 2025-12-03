@@ -128,7 +128,7 @@
     <script>
         window.onload = function() {
             if (localStorage.getItem('token')) {
-                window.location.href = "dash_contratante.html"; 
+                window.location.href = "dashboard.html"; 
             }
             // Garante que o botão comece no estado certo se a página recarregar com o checkbox marcado
             toggleRegisterButton();
@@ -191,7 +191,7 @@
                     const data = await response.json();
                     localStorage.setItem('token', data.access_token);
                     showMessage('msg-login', 'Sucesso! Redirecionando...');
-                    setTimeout(() => window.location.href = "dash_contratante.html", 1000);
+                    setTimeout(() => window.location.href = "dashboard.html", 1000);
                 } else {
                     showMessage('msg-login', 'Dados incorretos', true);
                 }

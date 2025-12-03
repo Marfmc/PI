@@ -2,80 +2,547 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Seguro</title>
+    <title>ConstruFácil - Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
     <style>
-        :root { --bg: #f4f4f4; --primary: #54A858; --dark: #013E46; }
-        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding-top: 50px; }
-        
-        .card { 
-            background: white; width: 500px; padding: 40px; border-radius: 10px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; 
+        /* ================================================================
+           1. VARIÁVEIS GLOBAIS
+           ================================================================ */
+        :root {
+            --cor-prestador: #54A858;   /* Verde */
+            --cor-contratante: #013E46; /* Azul Escuro */
+            --cor-fundo: #f9f9f9;
+            --cor-branco: #ffffff;
+            --cor-texto: #333;
+            --cor-alerta: #d9534f;
+            --transicao: 0.4s;
         }
 
-        h1 { color: var(--dark); margin-bottom: 10px; }
-        p { color: #666; font-size: 1.1rem; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--cor-fundo); margin: 0; transition: background 0.3s; }
         
-        .user-info {
-            background: #eef; padding: 15px; border-radius: 5px; 
-            margin: 20px 0; border-left: 4px solid var(--primary); text-align: left;
+        /* ================================================================
+           2. NAVBAR & TOGGLE
+           ================================================================ */
+        .navbar { 
+            background: var(--cor-branco); padding: 15px 30px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative;
+            transition: background-color var(--transicao) ease;
+        }
+        .navbar.provider-mode { background-color: var(--cor-prestador); }
+        .logo { font-weight: bold; font-size: 1.2rem; color: var(--cor-contratante); transition: color var(--transicao); }
+        .navbar.provider-mode .logo { color: var(--cor-branco); }
+
+        /* Botão Centralizado */
+        .toggle-container {
+            background: rgba(0,0,0,0.1); width: 240px; height: 40px; border-radius: 25px;
+            position: absolute; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 3px; cursor: pointer; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .toggle-slider {
+            position: absolute; top: 3px; left: 3px; width: 50%; height: 40px;
+            background: var(--cor-contratante); border-radius: 22px; 
+            transition: all var(--transicao) cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5;
+        }
+        .toggle-label {
+            width: 50%; font-size: 0.9rem; font-weight: bold; z-index: 10; 
+            color: #666; transition: color 0.3s; position: relative; user-select: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .toggle-label.active-left { color: var(--cor-branco) !important; }
+        .navbar.provider-mode .toggle-slider { left: 50%; background: var(--cor-branco); }
+        .navbar.provider-mode .toggle-label.right-label { color: var(--cor-prestador) !important; }
+        .navbar.provider-mode .toggle-label.left-label { color: rgba(255,255,255,0.8) !important; }
+
+        /* Cadeado */
+        .padlock-icon {
+            display: none; margin-left: 8px; width: 14px; height: 14px;
+            color: #888; transition: color 0.3s; z-index: 15;
+        }
+        .toggle-container.locked-mode .padlock-icon { display: block; }
+        .padlock-icon.shaking { animation: shake 0.4s ease-in-out; color: var(--cor-alerta); }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-3px); }
+            40%, 80% { transform: translateX(3px); }
         }
 
-        button {
-            background: #d9534f; color: white; border: none; padding: 10px 20px; 
-            border-radius: 5px; cursor: pointer; font-size: 1rem;
+        /* ================================================================
+           3. LAYOUT & CARDS
+           ================================================================ */
+        .view-section { display: none; padding: 40px; max-width: 900px; margin: 0 auto; animation: fadeIn 0.5s; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cabeçalho de Seção Flexível */
+        .header-flex {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;
         }
-        button:hover { background: #c9302c; }
+        .header-flex h1 { margin: 0; color: var(--cor-contratante); font-size: 1.8rem; }
+
+        /* Cards */
+        .job-card { 
+            background: var(--cor-branco); border: 1px solid #eee; padding: 20px; 
+            margin-bottom: 20px; border-radius: 8px; text-align: left; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; transition: 0.2s;
+            box-sizing: border-box; width: 100%; border-left: 5px solid transparent;
+        }
+        .job-card.border-green { border-left-color: var(--cor-prestador); }
+        .job-card.border-blue { border-left-color: var(--cor-contratante); }
+        .job-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        /* Quebra de Texto */
+        .job-card p, .job-card h3, .modal-box p, .modal-box h2, .modal-box h3, .details-body p {
+            word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; max-width: 100%; 
+        }
+        .job-card p {
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .job-card h3 { margin-top: 0; color: var(--cor-texto); }
+        .badge { background: #eee; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; color: #555; font-weight: bold; }
+        .status-badge { float: right; font-size: 0.8rem; color: #888; }
+
+        /* Botões */
+        .btn-action { 
+            padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; 
+            font-weight: bold; color: white; transition: 0.2s; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-action:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        
+        .btn-contratante { background: var(--cor-contratante); }
+        .btn-prestador { background: var(--cor-prestador); }
+
+        a.logout-link { font-weight: bold; margin-left: 10px; cursor: pointer; text-decoration: none; }
+        .contratante-link { color: var(--cor-alerta); } 
+        .prestador-link { color: var(--cor-branco); }
+
+        /* ================================================================
+           4. MODAIS
+           ================================================================ */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: white; width: 95%; max-width: 600px; padding: 30px; border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideDown 0.3s;
+            max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 0.9rem; }
+        
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; 
+            box-sizing: border-box; font-family: inherit; font-size: 1rem;
+            background: #fff; transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--cor-contratante);
+        }
+        .form-group input[readonly] { background-color: #f9f9f9; color: #666; cursor: default; }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+
+        /* --- ESTILOS DO SUPER MODAL DE DETALHES (NOVO) --- */
+        .details-header { 
+            background: #f0f2f5; padding: 20px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            border-bottom: 1px solid #ddd; margin: -30px -30px 20px -30px; 
+        }
+        .user-profile { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { 
+            width: 50px; height: 50px; background: #ddd; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; color: #555; font-size: 1.2rem; 
+        }
+        .user-info h3 { margin: 0; color: var(--cor-texto); font-size: 1.1rem; }
+        .user-info span { font-size: 0.85rem; color: #666; }
+        
+        .service-meta { display: flex; gap: 15px; margin-bottom: 20px; color: #666; font-size: 0.9rem; }
+        
+        /* Área de Proposta (Escondida) */
+        #proposal-form-section { 
+            display: none; margin-top: 20px; background: #f9f9f9; 
+            padding: 20px; border-radius: 8px; border: 1px solid #eee; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Área Restrita</h1>
-        <p>Bem-vindo ao sistema.</p>
-
-        <div class="user-info">
-            <p><strong>Status:</strong> <span style="color:green">● Online</span></p>
-            <p><strong>ID:</strong> <span id="u-id">...</span></p>
-            <p><strong>Email:</strong> <span id="u-email">Carregando...</span></p>
+    <nav class="navbar" id="main-nav">
+        <div class="logo">ConstruFácil</div>
+        <div class="toggle-container" id="mode-toggle" onclick="toggleMode()">
+            <div class="toggle-slider"></div>
+            <div class="toggle-label left-label active-left">Contratante</div>
+            <div class="toggle-label right-label">
+                Prestador
+                <svg class="padlock-icon" id="padlock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
         </div>
+        <div>
+            <span id="u-email" style="font-weight: bold;">Carregando...</span> 
+            | <a onclick="logout()" class="logout-link contratante-link" id="btn-sair">Sair</a>
+        </div>
+    </nav>
 
-        <button onclick="logout()">Sair do Sistema</button>
+    <div id="view-contratante" class="view-section active">
+        <div class="header-flex">
+            <h1>Meus Pedidos</h1>
+            <button class="btn-action btn-contratante" onclick="openModalRequest()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                Novo Pedido
+            </button>
+        </div>
+        <div id="contractor-list"><p style="text-align: center; color: #999; margin-top:40px;">Carregando seus pedidos...</p></div>
     </div>
 
+    <div id="view-prestador" class="view-section">
+        <h1 style="text-align: center;">Mural de Serviços</h1>
+        <p style="text-align: center;">Oportunidades para: <strong id="u-skills" style="color: var(--cor-prestador)">...</strong></p>
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 20px 0;">
+        <div id="provider-feed"><p style="text-align: center; color: #999;">Buscando oportunidades...</p></div>
+    </div>
+
+    <div id="new-request-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-top: 0; margin-bottom: 20px; color: var(--cor-contratante);">O que você precisa?</h2>
+            <form onsubmit="submitService(event)">
+                <div class="form-group">
+                    <label>Título do Serviço</label>
+                    <input type="text" id="req-title" required placeholder="Ex: Conserto de Pia">
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="req-category" required>
+                        <option value="">Selecione...</option>
+                        <option value="Eletricista">Eletricista</option>
+                        <option value="Encanador">Encanador</option>
+                        <option value="Pedreiro">Pedreiro</option>
+                        <option value="Pintor">Pintor</option>
+                        <option value="Limpeza">Limpeza</option>
+                        <option value="Técnico TI">Técnico TI</option>
+                    </select>
+                </div>
+                
+                <div style="margin: 20px 0; border-top: 1px solid #f0f0f0;"></div>
+                <h4 style="margin: 0 0 15px 0; color: #555;">Endereço</h4>
+
+                <div class="form-group row-2">
+                    <div><label>CEP</label><input type="text" id="addr-zip" required placeholder="00000-000" onblur="buscarCep(this.value)"></div>
+                    <div><label>Rua</label><input type="text" id="addr-street" required readonly></div>
+                </div>
+                <div class="form-group row-2">
+                    <div><label>Número</label><input type="text" id="addr-number" required placeholder="123"></div>
+                    <div><label>Bairro</label><input type="text" id="addr-neighborhood" required readonly></div>
+                </div>
+                <div class="form-group row-3">
+                    <div style="grid-column: span 2;"><label>Cidade</label><input type="text" id="addr-city" required readonly></div>
+                    <div><label>UF</label><input type="text" id="addr-state" required readonly maxlength="2" style="text-align: center; text-transform: uppercase;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="req-desc" required placeholder="Descreva o problema..." rows="3"></textarea>
+                </div>
+
+                <div style="text-align: right; margin-top: 25px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="closeModal('new-request-modal')" style="background: transparent; color: #666; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                    <button type="submit" class="btn-action btn-contratante" id="btn-publicar">Publicar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="service-details-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 700px;">
+            <div class="details-header">
+                <div class="user-profile">
+                    <div class="user-avatar" id="det-avatar">CL</div>
+                    <div class="user-info">
+                        <h3 id="det-client-name">Cliente</h3>
+                        <span>Cliente Verificado ✅</span>
+                    </div>
+                </div>
+                <button onclick="closeDetails()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div style="padding: 0 25px 25px 25px; overflow-y:auto;">
+                <h2 id="det-title" style="color: var(--cor-contratante); margin-top:0;">Título</h2>
+                <p id="det-desc" style="line-height:1.6; color:#555;">Descrição...</p>
+                
+                <div class="service-meta">
+                    <span id="det-cat" class="badge">Categoria</span>
+                    <span id="det-loc">📍 Local</span>
+                    <span id="det-date">📅 Data</span>
+                </div>
+
+                <div id="proposal-form-section">
+                    <h4 style="color:var(--cor-prestador); margin-top:0;">Enviar Orçamento</h4>
+                    <form onsubmit="submitProposal(event)">
+                        <input type="hidden" id="prop-req-id">
+                        <div class="form-group row-2">
+                            <div><label>Valor (R$)</label><input type="text" id="prop-price" required placeholder="0,00" style="font-weight:bold; color:var(--cor-prestador);"></div>
+                            <div><label>Tempo</label><input type="text" id="prop-time" required placeholder="Ex: 2 dias"></div>
+                        </div>
+                        <div class="form-group"><label>Detalhes</label><textarea id="prop-desc" rows="3" required placeholder="O que está incluso?"></textarea></div>
+                        <button type="submit" class="btn-action btn-prestador" style="width:100%; justify-content:center;">Confirmar Envio</button>
+                    </form>
+                </div>
+            </div>
+
+            <div style="padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px;">
+                <button class="btn-action" style="background:white; color:var(--cor-contratante); border:1px solid var(--cor-contratante); flex:1; justify-content:center;" onclick="alert('Chat em breve!')">
+                    Chat
+                </button>
+                <button class="btn-action btn-prestador" style="flex:2; justify-content:center;" onclick="showProposalForm()">
+                    Fazer Proposta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setup-required-modal" class="modal-overlay">
+        <div class="modal-box" style="text-align: center; max-width: 400px; padding: 40px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#d9534f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:15px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <h2 style="margin-top: 0; color: var(--cor-texto);">Área Restrita</h2>
+            <p style="color: #666; margin-bottom: 25px;">Ative seu <strong>Perfil Profissional</strong> para acessar.</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button onclick="closeModal('setup-required-modal')" style="background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Depois</button>
+                <button onclick="goToSetup()" class="btn-action btn-prestador">Ativar Agora</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://unpkg.com/imask"></script>
+
     <script>
-        // 1. SEGURANÇA: Verificar Token imediatamente
+        const CONFIG = {
+            apiMe: "/me", apiPostService: "/services/", apiMyRequests: "/services/my-requests", apiFeed: "/services/feed", apiProposals: "/proposals/",
+            urls: { login: "login.html", setup: "setup_prestador.html" }
+        };
         const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = "index.html"; // Chuta de volta pro login
+        if (!token) window.location.href = CONFIG.urls.login;
+
+        let currentUser = null;
+        let isProviderMode = false;
+
+        const notify = (text, type="success") => {
+            let bg = type==="success" ? "linear-gradient(to right, #00b09b, #96c93d)" : "#ff5f6d";
+            Toastify({ text, duration: 3000, gravity: "top", position: "center", style: { background: bg } }).showToast();
+        };
+
+        window.onload = function() {
+            if(document.getElementById('addr-zip')) IMask(document.getElementById('addr-zip'), { mask: '00000-000' });
+            if(document.getElementById('prop-price')) IMask(document.getElementById('prop-price'), { mask: Number, scale: 2, signed: false, thousandsSeparator: '.', padFractionalZeros: true, radix: ',' });
+        };
+
+        async function loadUser() {
+            const res = await fetch(CONFIG.apiMe, { headers: { 'Authorization': `Bearer ${token}` }});
+            if (res.ok) {
+                currentUser = await res.json();
+                document.getElementById('u-email').innerText = currentUser.full_name || currentUser.email;
+                if(currentUser.profession) document.getElementById('u-skills').innerText = currentUser.profession.join(", ");
+                updateLockStatus(); loadContractorData();
+            } else { logout(); }
         }
 
-        // 2. BUSCAR DADOS DO BACKEND
-        async function loadProfile() {
+        async function loadContractorData() {
+            const res = await fetch(CONFIG.apiMyRequests, { headers: { 'Authorization': `Bearer ${token}` }});
+            const data = await res.json();
+            document.getElementById('contractor-list').innerHTML = data.length ? data.map(req => `
+                <div class="job-card border-blue">
+                    <span class="status-badge">Status: ${req.status}</span>
+                    <h3>${req.title}</h3>
+                    <span class="badge">${req.category}</span>
+                    <p>${req.description}</p>
+                    <small style="color:#aaa">📍 ${req.city || 'Local'} - ${new Date(req.created_at).toLocaleDateString()}</small>
+                </div>
+            `).join('') : '<p align="center" style="color:#999; margin-top:40px;">Você ainda não fez nenhum pedido.</p>';
+        }
+
+        async function loadProviderData() {
+            const res = await fetch(CONFIG.apiFeed, { headers: { 'Authorization': `Bearer ${token}` }});
+            const data = await res.json();
+            const container = document.getElementById('provider-feed');
+            
+            if(data.length === 0) { container.innerHTML = '<p align="center" style="color:#999; margin-top:40px;">Nenhum serviço disponível.</p>'; return; }
+
+            // Renderiza os Cards com a função openDetails nova
+            container.innerHTML = data.map(req => `
+                <div class="job-card border-green">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3>${req.title}</h3>
+                        <small style="color:#aaa; font-size:0.8rem;">${new Date(req.created_at).toLocaleDateString()}</small>
+                    </div>
+                    
+                    <p>${req.description}</p>
+                    
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                        <span class="badge">${req.category}</span>
+                        <span style="font-size:0.85rem; color:#888;">📍 ${req.city || 'Local'}</span>
+                    </div>
+
+                    <button class="btn-action btn-prestador" style="margin-top:15px; width:100%; justify-content:center;"
+                        onclick='openDetails(${JSON.stringify(req).replace(/'/g, "&apos;")})'>
+                        Ver Detalhes
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // --- FUNÇÕES DO SUPER MODAL ---
+        function openDetails(req) {
+            // Nome do Cliente
+            document.getElementById('det-client-name').innerText = req.contractor_name || "Cliente";
+            // Avatar (Inicial)
+            const initial = (req.contractor_name || "C").charAt(0).toUpperCase();
+            document.getElementById('det-avatar').innerText = initial;
+            
+            // Dados do Serviço
+            document.getElementById('det-title').innerText = req.title;
+            document.getElementById('det-desc').innerText = req.description;
+            // Badge Categoria
+            document.querySelector('.service-meta .badge').innerText = req.category;
+            document.getElementById('det-loc').innerText = `📍 ${req.city || 'Brasil'} - ${req.state || ''}`;
+            document.getElementById('det-date').innerText = `📅 ${new Date(req.created_at).toLocaleDateString()}`;
+            
+            // Reset do Form
+            document.getElementById('prop-req-id').value = req.id;
+            document.getElementById('proposal-form-section').style.display = 'none';
+            document.getElementById('service-details-modal').style.display = 'flex';
+        }
+
+        function closeDetails() { document.getElementById('service-details-modal').style.display = 'none'; }
+        function showProposalForm() { 
+            document.getElementById('proposal-form-section').style.display = 'block';
+            document.getElementById('proposal-form-section').scrollIntoView({behavior:'smooth'});
+        }
+
+        // --- ENVIAR PROPOSTA ---
+        async function submitProposal(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerText = "Enviando...";
+
+            const rawPrice = document.getElementById('prop-price').value.replace('.','').replace(',','.');
+            const payload = {
+                request_id: parseInt(document.getElementById('prop-req-id').value),
+                price: parseFloat(rawPrice),
+                estimated_time: document.getElementById('prop-time').value,
+                description: document.getElementById('prop-desc').value
+            };
+            
             try {
-                const response = await fetch('/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch(CONFIG.apiProposals, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
                 });
 
-                if (response.ok) {
-                    const user = await response.json();
-                    document.getElementById('u-email').innerText = user.email;
-                    document.getElementById('u-id').innerText = "#" + user.id;
+                if(res.ok) {
+                    notify("Proposta enviada!"); closeDetails();
+                    document.getElementById('prop-price').value = '';
+                    document.getElementById('prop-desc').value = '';
                 } else {
-                    // Token expirou ou é falso
-                    logout();
+                    const err = await res.json(); notify(err.detail || "Erro.", "error");
                 }
-            } catch (error) {
-                console.error(error);
+            } catch(e) { notify("Erro conexão.", "error"); }
+            finally { btn.disabled = false; btn.innerText = "Confirmar Envio"; }
+        }
+
+        // --- SUBMIT SERVICE ---
+        async function submitService(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('req-title').value,
+                category: document.getElementById('req-category').value,
+                description: document.getElementById('req-desc').value,
+                zip_code: document.getElementById('addr-zip').value,
+                street: document.getElementById('addr-street').value,
+                number: document.getElementById('addr-number').value,
+                neighborhood: document.getElementById('addr-neighborhood').value,
+                city: document.getElementById('addr-city').value,
+                state: document.getElementById('addr-state').value
+            };
+            const btn = document.getElementById('btn-publicar'); btn.disabled=true; btn.innerText="Publicando...";
+            try {
+                const res = await fetch(CONFIG.apiPostService, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify(payload)});
+                if(res.ok) { notify("Pedido publicado!"); closeModal('new-request-modal'); loadContractorData(); }
+                else notify("Erro ao publicar.", "error");
+            } catch(e) { notify("Erro conexão.", "error"); }
+            finally { btn.disabled=false; btn.innerText="Publicar"; }
+        }
+
+        // --- UTILS ---
+        async function buscarCep(cep) {
+            const clean = cep.replace(/\D/g, '');
+            if(clean.length===8) {
+                try {
+                    const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+                    const data = await res.json();
+                    if(!data.erro) {
+                        document.getElementById('addr-street').value = data.logradouro;
+                        document.getElementById('addr-neighborhood').value = data.bairro;
+                        document.getElementById('addr-city').value = data.localidade;
+                        document.getElementById('addr-state').value = data.uf;
+                        document.getElementById('addr-number').focus();
+                    } else notify("CEP não encontrado.", "error");
+                } catch(e) { notify("Erro ao buscar CEP.", "error"); }
             }
         }
 
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = "index.html";
-        }
+        function openModalRequest() { document.getElementById('new-request-modal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function goToSetup() { window.location.href = CONFIG.urls.setup; }
 
-        // Inicia a busca
-        loadProfile();
+        function updateLockStatus() {
+            const el = document.getElementById('mode-toggle');
+            if(!currentUser.is_provider_setup) el.classList.add('locked-mode'); else el.classList.remove('locked-mode');
+        }
+        function triggerShake() {
+            const el = document.getElementById('padlock'); el.classList.add('shaking');
+            setTimeout(()=>el.classList.remove('shaking'), 400);
+        }
+        function toggleMode() {
+            if(!isProviderMode) {
+                if(!currentUser.is_provider_setup) {
+                    triggerShake(); setTimeout(()=>document.getElementById('setup-required-modal').style.display='flex', 400); return;
+                }
+                enableProviderMode();
+            } else enableContractorMode();
+        }
+        function enableProviderMode() {
+            isProviderMode=true;
+            document.getElementById('main-nav').classList.add('provider-mode');
+            document.querySelector('.left-label').classList.remove('active-left');
+            document.querySelector('.right-label').classList.add('active-text'); 
+            document.getElementById('view-contratante').classList.remove('active');
+            document.getElementById('view-prestador').classList.add('active');
+            document.getElementById('btn-sair').className="logout-link prestador-link";
+            loadProviderData();
+        }
+        function enableContractorMode() {
+            isProviderMode=false;
+            document.getElementById('main-nav').classList.remove('provider-mode');
+            document.querySelector('.left-label').classList.add('active-left');
+            document.querySelector('.right-label').classList.remove('active-text');
+            document.getElementById('view-contratante').classList.add('active');
+            document.getElementById('view-prestador').classList.remove('active');
+            document.getElementById('btn-sair').className="logout-link contratante-link";
+        }
+        function logout() { localStorage.removeItem('token'); window.location.href = CONFIG.urls.login; }
+
+        loadUser();
     </script>
 </body>
 </html>
